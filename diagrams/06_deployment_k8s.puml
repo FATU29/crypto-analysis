@@ -1,0 +1,93 @@
+@startuml Deployment Architecture - Production Deployment
+!theme plain
+title Deployment Architecture - Triển Khai Sản Xuất
+
+cloud Internet
+
+Internet --> CDN[CDN - Static Assets]
+
+Internet --> CloudFlare[CloudFlare - DDoS Protection\nRate Limiting]
+
+CloudFlare --> LoadBalancer[AWS ELB\nLoad Balancer]
+
+package "Kubernetes Cluster" {
+  node "K8s Master" as MASTER
+  
+  node "Node 1" {
+    pod "Nginx-1" as POD_NGINX_1
+    pod "Auth-1" as POD_AUTH_1
+    pod "Crawler-1" as POD_CRAWLER_1
+  }
+  
+  node "Node 2" {
+    pod "Nginx-2" as POD_NGINX_2
+    pod "Auth-2" as POD_AUTH_2
+    pod "Price-1" as POD_PRICE_1
+  }
+  
+  node "Node 3" {
+    pod "AI-1" as POD_AI_1
+    pod "Chart-1" as POD_CHART_1
+    pod "Monitor-1" as POD_MON_1
+  }
+  
+  component "Persistent Volume\nStorage" as PV
+}
+
+package "Managed Services" {
+  database "RDS PostgreSQL" as RDS
+  database "DocumentDB MongoDB" as DOCDB
+  database "Timestream InfluxDB" as TS
+  cache "ElastiCache Redis" as ELASTICACHE
+  queue "Amazon MQ\n(RabbitMQ)" as MQ
+}
+
+package "Monitoring Stack" {
+  component "Prometheus" as PROM
+  component "Grafana" as GRAFANA
+  component "CloudWatch" as CLOUDWATCH
+}
+
+LoadBalancer --> POD_NGINX_1
+LoadBalancer --> POD_NGINX_2
+
+POD_NGINX_1 --> POD_AUTH_1
+POD_NGINX_2 --> POD_AUTH_2
+
+POD_AUTH_1 --> POD_CRAWLER_1
+POD_AUTH_1 --> POD_PRICE_1
+POD_AUTH_2 --> POD_CHART_1
+
+POD_CRAWLER_1 --> MQ
+POD_PRICE_1 --> ELASTICACHE
+
+MQ --> POD_AI_1
+
+POD_AI_1 --> DOCDB
+POD_PRICE_1 --> TS
+POD_AUTH_1 --> RDS
+POD_CHART_1 --> ELASTICACHE
+
+POD_MON_1 --> PROM
+PROM --> GRAFANA
+PROM --> CLOUDWATCH
+
+POD_NGINX_1 -.-> PV
+POD_NGINX_2 -.-> PV
+POD_CRAWLER_1 -.-> PV
+
+note right of LoadBalancer
+  Auto-scaling:
+  Min: 3 replicas
+  Max: 10 replicas
+  Based on CPU/Memory
+end note
+
+note right of MQ
+  Message Broker:
+  - Topic-based
+  - Dead Letter Queue
+  - Replay capability
+end note
+
+@enduml

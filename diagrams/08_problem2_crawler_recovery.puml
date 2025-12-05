@@ -1,0 +1,52 @@
+@startuml Problem 2 - Crawler HTML Recovery
+!theme plain
+title Problem 2: Crawler Self-Recovery from HTML Changes
+
+actor Website
+
+Website --> HTMLChange: "We redesigned!\nclass='headline' → class='article-h1'"
+
+HTMLChange --> Crawler: Try selector\n.headline
+
+Crawler --> HTMLValidator: Found?\nNo match
+
+HTMLValidator --> PatternCache: Check cache\nfor pattern
+
+PatternCache --> CacheEmpty: Pattern not found\n(website changed)
+
+CacheEmpty --> LLMTrigger: Trigger LLM\nlearning
+
+LLMTrigger --> GPT4: "Analyze this HTML\nFind new selector\nfor article titles\nConfidence ≥ 0.8"
+
+GPT4 --> Selector: "Use .article-h1\nConfidence: 0.92"
+
+Selector --> SelectorTest: Test on 3 pages\nSuccess rate: 90%
+
+SelectorTest --> CacheStore: Store new selector\nin cache
+
+CacheStore --> Newsletter: Extract titles\nwith new selector
+
+Newsletter --> Monitor: Log change\nevent
+
+Monitor --> Alert: Alert: \"Found new\nHTML pattern\""
+
+note right of GPT4
+  Cost: ~$0.10/site/month
+  Time: 2-5 seconds
+  Accuracy: 90%+ success
+end note
+
+note right of CacheStore
+  Pattern cache structure:
+  {
+    "cnn.com": {
+      "selector": ".article-h1",
+      "fallback": [".headline", "h2.title"],
+      "confidence": 0.92,
+      "updated": "2025-12-05",
+      "success_rate": 0.90
+    }
+  }
+end note
+
+@enduml

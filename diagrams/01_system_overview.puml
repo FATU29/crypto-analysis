@@ -1,0 +1,89 @@
+@startuml System Overview - Hệ Thống Crypto Analysis
+!theme plain
+title System Overview - Hệ Thống Phân Tích Crypto
+
+package "Frontend Layer" {
+  component [React Dashboard] as FE_REACT
+  component [WebSocket Client] as FE_WS
+}
+
+package "API Gateway" {
+  component [Nginx/Kong] as GATEWAY
+  component [Rate Limiter] as RATELIMIT
+  component [Load Balancer] as LB
+}
+
+package "Backend Services" {
+  component [Auth Service\n(JWT)] as AUTH
+  component [Crawler Service\n(News)"] as CRAWLER
+  component [Price Service\n(Real-time)"] as PRICE
+  component [AI Analysis\n(Sentiment/NER)"] as AI
+  component [Chart Service\n(OHLCV)"] as CHART
+}
+
+package "Message Queue" {
+  component [RabbitMQ] as QUEUE
+  component [Message Broker] as BROKER
+}
+
+package "Storage Layer" {
+  database [PostgreSQL\n(Users/Auth)"] as DB_PG
+  database [MongoDB\n(News/Analysis)"] as DB_MONGO
+  database [InfluxDB\n(Time-Series)"] as DB_TS
+  database [Redis\n(Cache/Pub-Sub)"] as CACHE
+}
+
+package "AI/ML Layer" {
+  component [FinBERT\n(Sentiment)"] as ML_FINBERT
+  component [spaCy\n(NER)"] as ML_SPACY
+  component [GPT-4\n(Analysis)"] as ML_GPT4
+}
+
+package "Monitoring" {
+  component [Prometheus] as PROM
+  component [Grafana] as GRAFANA
+  component [Kibana] as KIBANA
+}
+
+' Frontend to Gateway
+FE_REACT --> GATEWAY
+FE_WS --> GATEWAY
+
+' Gateway to Services
+GATEWAY --> AUTH
+GATEWAY --> CRAWLER
+GATEWAY --> PRICE
+GATEWAY --> CHART
+
+' Services to Queue
+CRAWLER --> QUEUE
+PRICE --> QUEUE
+
+' Queue to Processing
+QUEUE --> AI
+QUEUE --> BROKER
+
+' Services to Storage
+AUTH --> DB_PG
+CRAWLER --> DB_MONGO
+PRICE --> DB_TS
+CHART --> CACHE
+AI --> DB_MONGO
+
+' Real-time
+PRICE --> CACHE
+CACHE --> FE_WS
+
+' ML Integration
+AI --> ML_FINBERT
+AI --> ML_SPACY
+AI --> ML_GPT4
+
+' Monitoring
+AUTH -.-> PROM
+CRAWLER -.-> PROM
+PRICE -.-> PROM
+PROM --> GRAFANA
+PROM --> KIBANA
+
+@enduml

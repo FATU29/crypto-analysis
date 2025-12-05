@@ -1,0 +1,93 @@
+@startuml Architecture Layers - 10 Layers
+!theme plain
+title 10-Layer Architecture - Kiến Trúc 10 Tầng
+
+package "Layer 1: Client & UI" {
+  component [React Dashboard] as L1_REACT
+  component [Mobile App] as L1_MOBILE
+  component [WebSocket Client] as L1_WS
+}
+
+package "Layer 2: API Gateway & Routing" {
+  component [Nginx/Kong API Gateway] as L2_GATEWAY
+  component [Request Router] as L2_ROUTER
+  component [Rate Limiter] as L2_RATELIMIT
+  component [Load Balancer] as L2_LB
+}
+
+package "Layer 3: Authentication & Authorization" {
+  component [JWT Service] as L3_JWT
+  component [OAuth2 Handler] as L3_OAUTH
+  component [RBAC Service] as L3_RBAC
+}
+
+package "Layer 4: Business Logic Services" {
+  component [Crawler Service] as L4_CRAWLER
+  component [Price Service] as L4_PRICE
+  component [User Service] as L4_USER
+  component [Chart Service] as L4_CHART
+}
+
+package "Layer 5: Message Queue & Async" {
+  component [RabbitMQ] as L5_QUEUE
+  component [Message Publisher] as L5_PUB
+  component [Event Consumer] as L5_CONSUMER
+}
+
+package "Layer 6: Data Processing" {
+  component [Data Processor] as L6_PROC
+  component [Transformer] as L6_TRANS
+  component [Validator] as L6_VAL
+}
+
+package "Layer 7: AI/ML Pipeline" {
+  component [FinBERT\n(Sentiment)] as L7_BERT
+  component [spaCy\n(NER)] as L7_SPACY
+  component [Granger\n(Causality)] as L7_GRANGER
+  component [GPT-4\n(Analysis)] as L7_GPT4
+}
+
+package "Layer 8: Data Storage" {
+  database [PostgreSQL] as L8_PG
+  database [MongoDB] as L8_MONGO
+  database [InfluxDB] as L8_INFLUX
+  database [Redis] as L8_REDIS
+}
+
+package "Layer 9: Real-time Broadcasting" {
+  component [Redis Pub/Sub] as L9_PUBSUB
+  component [WebSocket Server] as L9_WS
+  component [Stream Processor] as L9_STREAM
+}
+
+package "Layer 10: Monitoring & Observability" {
+  component [Prometheus] as L10_PROM
+  component [Grafana] as L10_GRAFANA
+  component [ELK Stack] as L10_ELK
+  component [Jaeger] as L10_JAEGER
+}
+
+' Vertical Flow
+L1_REACT --> L2_GATEWAY
+L1_MOBILE --> L2_GATEWAY
+L2_GATEWAY --> L3_JWT
+L3_JWT --> L4_CRAWLER
+L3_JWT --> L4_PRICE
+L3_JWT --> L4_USER
+L4_CRAWLER --> L5_QUEUE
+L4_PRICE --> L5_QUEUE
+L5_QUEUE --> L6_PROC
+L6_PROC --> L7_BERT
+L7_BERT --> L8_MONGO
+L4_PRICE --> L8_INFLUX
+L8_REDIS --> L9_WS
+L9_WS --> L1_REACT
+
+' Monitoring All Layers
+L2_GATEWAY -.-> L10_PROM
+L3_JWT -.-> L10_PROM
+L4_CRAWLER -.-> L10_PROM
+L7_BERT -.-> L10_PROM
+L10_PROM --> L10_GRAFANA
+
+@enduml

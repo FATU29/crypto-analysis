@@ -1,0 +1,58 @@
+@startuml Problem 1 - WebSocket Scaling Solution
+!theme plain
+title Problem 1: WebSocket Scaling for 10K Concurrent Users
+
+package "Without Pub/Sub (❌ Single Server)" {
+  component [Price\nService] as PS1
+  
+  component [WebSocket\nServer 1\n(1 server)] as WS1
+  
+  PS1 --> WS1: Send price to\n10K connections
+  
+  note right of WS1
+    ❌ Max 65K connections
+    ❌ Cannot scale horizontally
+    ❌ Bottleneck at single server
+    ❌ Memory: ~10-50GB for 10K users
+  end note
+}
+
+package "With Redis Pub/Sub (✅ Scaled)" {
+  component [Price\nService] as PS2
+  
+  component [Redis\nPub/Sub\n(Central Hub)] as REDIS
+  
+  component [WebSocket\nServer 1] as WS2
+  component [WebSocket\nServer 2] as WS3
+  component [WebSocket\nServer 3] as WS4
+  component [...] as WSMORE
+  
+  PS2 --> REDIS: PUBLISH\nbtcusdt:price\n"$45,000"
+  
+  REDIS --> WS2: Subscribe
+  REDIS --> WS3: Subscribe
+  REDIS --> WS4: Subscribe
+  REDIS --> WSMORE: Subscribe
+  
+  note right of REDIS
+    ✅ Stateless servers
+    ✅ Horizontal scalable
+    ✅ Add more WS servers
+    ✅10K connections distributed
+    ✅ <100ms latency
+  end note
+}
+
+note bottom
+  Key Pattern: 
+  1. Price updates → Redis PUBLISH
+  2. WebSocket servers → Redis SUBSCRIBE
+  3. Redis routes to all subscribers
+  4. Result: 10K users get update instantly
+  
+  Scaling Example:
+  1 server (10 users) → 100 servers (1000 users) → 1000 servers (10K users)
+  Same code, just horizontal scaling!
+end note
+
+@enduml
